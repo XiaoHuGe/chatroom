@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"chatroom/common/message"
@@ -8,7 +8,11 @@ import (
 	"net"
 )
 
-func login(userId int, userPwd string) (err error) {
+type UserProcess struct {
+
+}
+
+func (this *UserProcess)Login(userId int, userPwd string) (err error) {
 	fmt.Println("进入登录系统...")
 	fmt.Println("用户ID：", userId)
 	fmt.Println("用户密码：", userPwd)
@@ -45,14 +49,19 @@ func login(userId int, userPwd string) (err error) {
 	}
 
 	// 发送data到服务器
-	err = utils.WritePkg(conn, data)
+	transfer := utils.Transfer{
+		Conn:conn,
+	}
+	err = transfer.WritePkg(data)
+	//err = utils.WritePkg(conn, data)
 	if err != nil {
 		fmt.Println("utils.WritePkg error:", err)
 		return
 	}
 
 	// 3. 获取服务器返回内容
-	msg, err = utils.ReadPkg(conn)
+	//msg, err = utils.ReadPkg(conn)
+	msg, err = transfer.ReadPkg()
 	if err != nil {
 		fmt.Println("utils.ReadPkg(conn) error")
 		return

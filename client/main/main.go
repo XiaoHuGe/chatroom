@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"chatroom/client/service"
+	"fmt"
+)
 
 var (
 	userId int
@@ -23,7 +26,8 @@ func main() {
 				fmt.Scanln(&userId)
 				fmt.Println("请输入用户密码：")
 				fmt.Scanln(&userPwd)
-				err := login(userId, userPwd)
+				up := &service.UserProcess{}
+				err := up.Login(userId, userPwd)
 				if err != nil {
 					println("登录失败")
 				}
