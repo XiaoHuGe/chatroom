@@ -1,6 +1,9 @@
 package service
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 func ShowMenu()  {
 	fmt.Println("-------恭喜xxx登录成功---------")
@@ -22,6 +25,7 @@ func ShowMenu()  {
 			fmt.Println("信息列表")
 		case 4:
 			fmt.Println("退出系统")
+			os.Exit(0)
 		default:
 			fmt.Println("输入错误")
 	}

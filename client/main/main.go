@@ -9,6 +9,7 @@ import (
 var (
 	userId int
 	userPwd string
+	userName string
 )
 
 func main() {
@@ -37,14 +38,22 @@ func main() {
 				//return
 			case 2:
 				fmt.Println("--------注册聊天系统--------")
-				return
+				fmt.Println("请输入用户ID：")
+				fmt.Scanln(&userId)
+				fmt.Println("请输入用户密码：")
+				fmt.Scanln(&userPwd)
+				fmt.Println("请输入用户昵称：")
+				fmt.Scanln(&userName)
+				up := &service.UserProcess{}
+				err := up.Register(userId, userPwd, userName)
+				if err != nil {
+					println("登录失败")
+				}
 			case 3:
 				fmt.Println("--------退出聊天系统--------")
 				os.Exit(0)
 			default:
 				fmt.Println("输入错误，重新输入1-3")
-				//fmt.Scanln(&num)
-				//break
 
 		}
 	}

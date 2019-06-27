@@ -13,6 +13,65 @@ type UserProcess struct {
 	Conn net.Conn
 }
 
+func (this *UserProcess)ServerProcessRegister(msg *message.Message) (err error){
+
+	// 创建RegisterMsg结构体
+	var registerMsg message.RegisterMsg
+	err = json.Unmarshal([]byte(msg.Data), &registerMsg)
+	if err != nil {
+		fmt.Println("json.Unmarshal err: ", err)
+		return
+	}
+
+	fmt.Println("LoginMsg userID:", registerMsg.User.UserId)
+	fmt.Println("LoginMsg userPwd:", registerMsg.User.UserPwd)
+	fmt.Println("LoginMsg userPwd:", registerMsg.User.UserName)
+
+	// 创建Message结构体
+	var resMsg message.Message
+	resMsg.Type = message.RegisterResMsgType
+
+	// 创建RegisterResMsg结构体
+	var registerResMsg message.RegisterResMsg
+
+	// 判断是否注册成功
+	err = model.MyUserDao.Register(&registerMsg.User)
+	if err != nil {
+		if err == model.ERROR_UESR_EXISTS {
+			fmt.Println("用户已存在")
+			registerResMsg.Code = 501
+			registerResMsg.ErrorInfo = err.Error()
+		} else {
+			fmt.Println("服务器内部错误")
+			registerResMsg.Code = 505
+			registerResMsg.ErrorInfo = "服务器内部错误"
+		}
+	} else {
+		registerResMsg.Code = 200
+		fmt.Println("注册成功")
+	}
+
+	// 序列化loginResMsg
+	data, err := json.Marshal(registerResMsg)
+	if err != nil {
+		fmt.Println("json.Marshal error: ", err)
+	}
+	//
+	resMsg.Data = string(data)
+
+	// 序列化Message
+	data, err = json.Marshal(resMsg)
+	if err != nil {
+		fmt.Println("json.Marsha Message error: ", err)
+	}
+	transfer := utils.Transfer{
+		Conn:this.Conn,
+	}
+	transfer.WritePkg(data)
+	return
+}
+
+
 func (this *UserProcess)ServerProcessLogin(msg *message.Message) (err error){
 
 	// 创建LoginMsg结构体
@@ -45,7 +104,7 @@ func (this *UserProcess)ServerProcessLogin(msg *message.Message) (err error){
 			loginResMsg.Code = 403
 			loginResMsg.ErrorInfo = err.Error()
 		} else {
-			fmt.Println("用户密码错误")
+			fmt.Println("服务器内部错误")
 			loginResMsg.Code = 505
 			loginResMsg.ErrorInfo = "服务器内部错误"
 		}
@@ -53,13 +112,6 @@ func (this *UserProcess)ServerProcessLogin(msg *message.Message) (err error){
 		loginResMsg.Code = 200
 		fmt.Println("登录成功")
 	}
-
-	//if loginMsg.UserId == 100 &&  loginMsg.UserPwd == "123456"{
-	//	loginResMsg.Code = 200
-	//} else {
-	//	loginResMsg.Code = 500
-	//	loginResMsg.ErrorInfo = "用户名或密码不正确"
-	//}
 
 	// 序列化loginResMsg
 	data, err := json.Marshal(loginResMsg)

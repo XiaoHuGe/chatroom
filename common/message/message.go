@@ -18,6 +18,18 @@ type LoginMsg struct {
 }
 
 type LoginResMsg struct {
-	Code int `json:"code""`
+	Code int `json:"code"`
+	ErrorInfo string `json:"error_info"`
+}
+
+type RegisterMsg struct {
+	User User `json:"user"`
+	//UserId int `json:"user_id"`
+	//UserPwd string `json:"user_pwd"`
+	//UserName string `json:"user_name"`
+}
+
+type RegisterResMsg struct {
+	Code int `json:"code"`
 	ErrorInfo string `json:"error_info"`
 }

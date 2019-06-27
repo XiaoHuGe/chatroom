@@ -1,6 +1,7 @@
 package model
 
 import (
+	"chatroom/common/message"
 	"encoding/json"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
@@ -59,5 +60,29 @@ func (this *UserDao) Login(userId int, userPwd string) (user *User, err error) {
 		return
 	}
 
+	return
+}
+
+func (this *UserDao) Register(user *message.User) (err error) {
+	// 从连接池获取一个连接
+	conn := this.pool.Get()
+	defer  conn.Close()
+	// 查询用户id
+	_, err = this.getUserById(conn, user.UserId)
+	fmt.Println("注册 UserId: ", user.UserId)
+	// 没有错误代表之前注册过
+	if err == nil {
+		err = ERROR_UESR_EXISTS
+		return
+	}
+
+	data, err :=  json.Marshal(user) // 序列化user
+
+	// 保存用户信息到redis
+	_, err = conn.Do("HSet", "users", user.UserId, string(data))
+	if err != nil {
+		fmt.Println("保存注册用户失败", err)
+		return
+	}
 	return
 }

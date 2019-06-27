@@ -12,6 +12,83 @@ type UserProcess struct {
 
 }
 
+func (this *UserProcess)Register(userId int, userPwd string, userName string) (err error) {
+	fmt.Println("进入注册系统...")
+	fmt.Println("用户ID：", userId)
+	fmt.Println("用户密码：", userPwd)
+	fmt.Println("用户昵称：", userName)
+
+	// 1.连接到服务器
+	conn , err := net.Dial("tcp", "localhost:8899")
+	if err != nil {
+		fmt.Println("net.Dial error")
+	}
+	defer conn.Close()
+
+	// 2. 通过conn发送消息
+	// 创建Message结构体对象
+	var msg message.Message
+	msg.Type = message.RegisterMsgType
+	// 创建LoginMsg结构体对象
+	var registerMsg message.RegisterMsg
+	registerMsg.User.UserId = userId
+	registerMsg.User.UserPwd = userPwd
+	registerMsg.User.UserName = userName
+
+	// 把LoginMsg序列化
+	data, err := json.Marshal(registerMsg)
+	if err != nil {
+		fmt.Println("json.Marsha loginMsg error")
+		return
+	}
+	msg.Data = string(data)
+
+	// 把Message序列化
+	data, err = json.Marshal(msg)
+	if err != nil {
+		fmt.Println("json.Marsha Message error")
+		return
+	}
+
+	// 发送data到服务器
+	transfer := utils.Transfer{
+		Conn:conn,
+	}
+	err = transfer.WritePkg(data)
+	//err = utils.WritePkg(conn, data)
+	if err != nil {
+		fmt.Println("utils.WritePkg error:", err)
+		return
+	}
+
+	// 3. 获取服务器返回内容
+	//msg, err = utils.ReadPkg(conn)
+	msg, err = transfer.ReadPkg()
+	if err != nil {
+		fmt.Println("utils.ReadPkg(conn) error")
+		return
+	}
+
+	var registerResMsg message.RegisterResMsg
+
+	// 反序列化message
+	err = json.Unmarshal([]byte(msg.Data), &registerResMsg)
+	if err != nil {
+		fmt.Println("json.Unmarshal error:", err)
+		return
+	}
+	if registerResMsg.Code  == 200 {
+		fmt.Println("注册成功... 请重新登录")
+		fmt.Println("code:", registerResMsg.Code)
+	} else {
+		fmt.Println("注册失败...")
+		fmt.Println("code:", registerResMsg.Code)
+		fmt.Println("err_info:", registerResMsg.ErrorInfo)
+	}
+
+	return
+}
+
 func (this *UserProcess)Login(userId int, userPwd string) (err error) {
 	fmt.Println("进入登录系统...")
 	fmt.Println("用户ID：", userId)

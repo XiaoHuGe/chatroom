@@ -21,7 +21,10 @@ func (this *Process)ServerProcessMsg(msg *message.Message) (err error) {
 		 }
 		 userPro.ServerProcessLogin(msg)
 	case message.RegisterMsgType:
-	//
+		userPro := &services.UserProcess{
+			Conn:this.Conn,
+		}
+		userPro.ServerProcessRegister(msg)
 	default:
 		println("消息类型不存在")
 	}
@@ -30,8 +33,6 @@ func (this *Process)ServerProcessMsg(msg *message.Message) (err error) {
 
 
 func (this *Process)process() (err error) {
-
-	defer this.Conn.Close()
 
 	for {
 		// 读取客户端消息
