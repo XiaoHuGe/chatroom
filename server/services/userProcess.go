@@ -3,6 +3,7 @@ package services
 import (
 	"chatroom/common/message"
 	"chatroom/common/utils"
+	"chatroom/server/model"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -33,12 +34,32 @@ func (this *UserProcess)ServerProcessLogin(msg *message.Message) (err error){
 	var loginResMsg message.LoginResMsg
 
 	// 判断登录
-	if loginMsg.UserId == 100 &&  loginMsg.UserPwd == "123456"{
-		loginResMsg.Code = 200
+	_, err = model.MyUserDao.Login(loginMsg.UserId, loginMsg.UserPwd)
+	if err != nil {
+		if err == model.ERROR_UESR_NOTEXISTS {
+			fmt.Println("用户不存在")
+			loginResMsg.Code = 500
+			loginResMsg.ErrorInfo = err.Error()
+		} else if err == model.ERROR_UESR_PWD {
+			fmt.Println("用户密码错误")
+			loginResMsg.Code = 403
+			loginResMsg.ErrorInfo = err.Error()
+		} else {
+			fmt.Println("用户密码错误")
+			loginResMsg.Code = 505
+			loginResMsg.ErrorInfo = "服务器内部错误"
+		}
 	} else {
-		loginResMsg.Code = 500
-		loginResMsg.ErrorInfo = "用户名或密码不正确"
+		loginResMsg.Code = 200
+		fmt.Println("登录成功")
 	}
+
+	//if loginMsg.UserId == 100 &&  loginMsg.UserPwd == "123456"{
+	//	loginResMsg.Code = 200
+	//} else {
+	//	loginResMsg.Code = 500
+	//	loginResMsg.ErrorInfo = "用户名或密码不正确"
+	//}
 
 	// 序列化loginResMsg
 	data, err := json.Marshal(loginResMsg)

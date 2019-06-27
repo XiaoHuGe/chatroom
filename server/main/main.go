@@ -1,8 +1,10 @@
 package main
 
 import (
+	"chatroom/server/model"
 	"fmt"
 	"net"
+	"time"
 )
 
 //处理和客户端的通讯
@@ -11,14 +13,26 @@ func process(conn net.Conn) {
 	defer conn.Close()
 
 	//这里调用总控, 创建一个
-	pro := &Process{
+	process := &Process{
 		Conn : conn,
 	}
-	err := pro.process()
+	err := process.process()
 	if err != nil {
 		fmt.Println("pro.process err:", err)
 		return
 	}
+}
+
+func init() {
+	// 初始化Redis
+	InitRedis("localhost:6379", 10, 0, time.Second * 300)
+	// 初始化UserDao
+	InitUserDao()
+	//model.MyUserDao = model.NewUserDao(pool)
+}
+
+func InitUserDao() {
+	model.MyUserDao = model.NewUserDao(pool)
 }
 
 func main() {

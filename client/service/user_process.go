@@ -78,6 +78,11 @@ func (this *UserProcess)Login(userId int, userPwd string) (err error) {
 	if loginResMsg.Code  == 200 {
 		fmt.Println("登录成功...")
 		fmt.Println("code:", loginResMsg.Code)
+		// 进入菜单
+		for {
+			ShowMenu()
+		}
+
 	} else {
 		fmt.Println("登录失败...")
 		fmt.Println("code:", loginResMsg.Code)
