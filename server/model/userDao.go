@@ -77,7 +77,6 @@ func (this *UserDao) Register(user *message.User) (err error) {
 	}
 
 	data, err :=  json.Marshal(user) // 序列化user
-
 	// 保存用户信息到redis
 	_, err = conn.Do("HSet", "users", user.UserId, string(data))
 	if err != nil {

@@ -5,6 +5,13 @@ const (
 	LoginResMsgType  = "LoginResMsgType"
 	RegisterMsgType  = "RegisterMsgType"
 	RegisterResMsgType  = "RegisterResMsgType"
+	NotifyUserStatusMsgType = "NotifyUserStatusMsgType"
+)
+
+const (
+	UserOnline = iota
+	UserOffline
+	UserBusy
 )
 
 type Message struct {
@@ -19,6 +26,7 @@ type LoginMsg struct {
 
 type LoginResMsg struct {
 	Code int `json:"code"`
+	UsersId []int  `json:"users_id"`
 	ErrorInfo string `json:"error_info"`
 }
 
@@ -32,4 +40,9 @@ type RegisterMsg struct {
 type RegisterResMsg struct {
 	Code int `json:"code"`
 	ErrorInfo string `json:"error_info"`
+}
+
+type NotifyUserStatusMsg struct {
+	UserId int `json:"user_id"`
+	UserStatus int `json:"user_status"`
 }

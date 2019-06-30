@@ -15,18 +15,18 @@ type Process struct {
 
 func (this *Process)ServerProcessMsg(msg *message.Message) (err error) {
 	switch msg.Type {
-	case message.LoginMsgType:
-		 userPro := &services.UserProcess{
-		 	Conn:this.Conn,
-		 }
-		 userPro.ServerProcessLogin(msg)
-	case message.RegisterMsgType:
-		userPro := &services.UserProcess{
-			Conn:this.Conn,
-		}
-		userPro.ServerProcessRegister(msg)
-	default:
-		println("消息类型不存在")
+		case message.LoginMsgType:
+			 userPro := &services.UserProcess{
+				Conn:this.Conn,
+			 }
+			 userPro.ServerProcessLogin(msg)
+		case message.RegisterMsgType:
+			userPro := &services.UserProcess{
+				Conn:this.Conn,
+			}
+			userPro.ServerProcessRegister(msg)
+		default:
+			println("消息类型不存在")
 	}
 	return
 }
@@ -36,7 +36,7 @@ func (this *Process)process() (err error) {
 
 	for {
 		// 读取客户端消息
-		transfer := utils.Transfer{
+		transfer := &utils.Transfer{
 			Conn:this.Conn,
 		}
 		msg, err := transfer.ReadPkg()

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 )
 
 type UserProcess struct {
@@ -51,7 +52,7 @@ func (this *UserProcess)Register(userId int, userPwd string, userName string) (e
 	}
 
 	// 发送data到服务器
-	transfer := utils.Transfer{
+	transfer := &utils.Transfer{
 		Conn:conn,
 	}
 	err = transfer.WritePkg(data)
@@ -80,10 +81,12 @@ func (this *UserProcess)Register(userId int, userPwd string, userName string) (e
 	if registerResMsg.Code  == 200 {
 		fmt.Println("注册成功... 请重新登录")
 		fmt.Println("code:", registerResMsg.Code)
+		os.Exit(0)
 	} else {
 		fmt.Println("注册失败...")
 		fmt.Println("code:", registerResMsg.Code)
 		fmt.Println("err_info:", registerResMsg.ErrorInfo)
+		os.Exit(0)
 	}
 
 	return
@@ -126,7 +129,7 @@ func (this *UserProcess)Login(userId int, userPwd string) (err error) {
 	}
 
 	// 发送data到服务器
-	transfer := utils.Transfer{
+	transfer := &utils.Transfer{
 		Conn:conn,
 	}
 	err = transfer.WritePkg(data)
@@ -153,11 +156,27 @@ func (this *UserProcess)Login(userId int, userPwd string) (err error) {
 		return
 	}
 	if loginResMsg.Code  == 200 {
-		fmt.Println("登录成功...")
+		fmt.Printf("**** id为 %d 的用户登录成功 ****\n", userId)
 		fmt.Println("code:", loginResMsg.Code)
+		fmt.Printf("已在线用户列表id:")
+		for _, id := range loginResMsg.UsersId {
+			if id == userId {
+				continue
+			}
+			fmt.Printf(" %d", id)
+			// 把在线用户保存到map
+			user := &message.User{
+				UserId:id,
+				UserStatus:message.UserOnline,
+			}
+			onlineUsers[id] = user
+		}
+		println()
+		go serverProcessMes(conn)
+
 		// 进入菜单
 		for {
-			ShowMenu()
+			ShowMenu(userId)
 		}
 
 	} else {

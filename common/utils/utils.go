@@ -50,8 +50,7 @@ func (this *Transfer)WritePkg( data []byte) (err error) {
 		return
 	}
 
-	fmt.Printf("data len:%d, data:%s", len(data), string(data))
-	fmt.Println()
+	fmt.Printf("发送的数据：data len:%d, data:%s\n", len(data), string(data))
 
 	// 发送data
 	_, err = this.Conn.Write(data)

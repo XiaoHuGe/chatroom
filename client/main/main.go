@@ -13,20 +13,19 @@ var (
 )
 
 func main() {
-
 	for {
 		fmt.Println("--------欢迎登录聊天系统--------")
 		fmt.Println("1.登录聊天系统")
 		fmt.Println("2.注册用户")
 		fmt.Println("3.退出系统")
 		fmt.Println("请选择1-3")
+
 		var num int
 		fmt.Scanln(&num)
-
 		switch num {
 			case 1:
 				fmt.Println("--------登录聊天系统-------")
-				fmt.Println("请输入用户ID：")
+				fmt.Println("请输入用户Id：")
 				fmt.Scanln(&userId)
 				fmt.Println("请输入用户密码：")
 				fmt.Scanln(&userPwd)
@@ -38,7 +37,7 @@ func main() {
 				//return
 			case 2:
 				fmt.Println("--------注册聊天系统--------")
-				fmt.Println("请输入用户ID：")
+				fmt.Println("请输入用户Id：")
 				fmt.Scanln(&userId)
 				fmt.Println("请输入用户密码：")
 				fmt.Scanln(&userPwd)
