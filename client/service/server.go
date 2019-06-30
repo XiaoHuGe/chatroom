@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-func ShowMenu(userId int)  {
+func ShowMenu(conn net.Conn, userId int)  {
 	fmt.Println("-------1. 显示在线用户列表---------")
 	fmt.Println("-------2. 发送消息---------")
 	fmt.Println("-------3. 信息列表---------")
@@ -27,7 +27,9 @@ func ShowMenu(userId int)  {
 			fmt.Println("信息列表")
 		case 4:
 			fmt.Println("退出系统")
-			os.Exit(0)
+			up := &UserProcess{}
+			up.Logout(conn, userId)
+			//os.Exit(0)
 		default:
 			fmt.Println("输入错误")
 	}
@@ -53,9 +55,33 @@ func serverProcessMes(conn net.Conn) {
 					fmt.Println("json.Unmarshal err: ", err)
 					return
 				}
-				fmt.Printf("用户id为 %d 的用户上线了...\n", notifyUserStatusMsg.UserId)
+				switch notifyUserStatusMsg.UserStatus {
+					case message.UserOnline:
+						fmt.Printf("用户id为 %d 的用户上线了...\n", notifyUserStatusMsg.UserId)
+					case message.UserOffline:
+						fmt.Printf("用户id为 %d 的用户退出了...\n", notifyUserStatusMsg.UserId)
+				}
 				// 添加上线用户到map
 				UpdateUserStatus(&notifyUserStatusMsg)
+			case message.LogoutResMsgType:
+				var logoutResMsg message.LogoutResMsg
+				// 反序列化message
+				err = json.Unmarshal([]byte(msg.Data), &logoutResMsg)
+				if err != nil {
+					fmt.Println("json.Unmarshal error:", err)
+					return
+				}
+				fmt.Println("logoutResMsg Code:", logoutResMsg.Code)
+				if logoutResMsg.Code == 200 {
+					fmt.Printf("退出成功...\n")
+					fmt.Println("code:", logoutResMsg.Code)
+					os.Exit(0)
+				} else {
+					fmt.Println("退出失败...检查网络连接")
+					fmt.Println("code:", logoutResMsg.Code)
+					fmt.Println("err_info:", logoutResMsg.ErrorInfo)
+					return
+				}
 		}
 	}
 }

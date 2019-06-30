@@ -85,3 +85,15 @@ func (this *UserDao) Register(user *message.User) (err error) {
 	}
 	return
 }
+
+func (this *UserDao) Logout(userId int) (user *User, err error) {
+	// 从连接池获取一个连接
+	conn := this.pool.Get()
+	defer  conn.Close()
+	// 查询用户id
+	user, err = this.getUserById(conn, userId)
+	if err != nil {
+		return
+	}
+	return
+}

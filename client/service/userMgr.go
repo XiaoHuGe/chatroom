@@ -5,19 +5,24 @@ import (
 	"fmt"
 )
 
-var onlineUsers map[int]*message.User = make(map[int]*message.User, 10)
+const maxOnlineUser = 100
+
+var onlineUsers map[int]*message.User = make(map[int]*message.User, maxOnlineUser)
 func GetAllUser() {
 	fmt.Printf("当前在线用户列表id:")
-	for id, _ := range onlineUsers{
-		fmt.Printf(" %d", id)
+	for id, user := range onlineUsers{
+		if user.UserStatus == message.UserOnline {
+			fmt.Printf(" %d", id)
+		}
 	}
 	fmt.Println()
 }
 
+// 更新map
 func UpdateUserStatus(notifyUserStatus *message.NotifyUserStatusMsg) {
-	// 把上线用户添加到map
 	user, ok := onlineUsers[notifyUserStatus.UserId]
 	if !ok {
+		// 把上线用户添加到map
 		user = &message.User{
 			UserId:notifyUserStatus.UserId,
 			//UserStatus:notifyOnlineMsg.UserStatus,
@@ -25,4 +30,5 @@ func UpdateUserStatus(notifyUserStatus *message.NotifyUserStatusMsg) {
 	}
 	user.UserStatus = notifyUserStatus.UserStatus
 	onlineUsers[notifyUserStatus.UserId] = user
+	GetAllUser()
 }

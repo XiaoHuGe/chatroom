@@ -25,6 +25,11 @@ func (this *Process)ServerProcessMsg(msg *message.Message) (err error) {
 				Conn:this.Conn,
 			}
 			userPro.ServerProcessRegister(msg)
+		case message.LogoutMsgType:
+			userPro := &services.UserProcess{
+				Conn:this.Conn,
+			}
+			userPro.ServerProcessLogout(msg)
 		default:
 			println("消息类型不存在")
 	}

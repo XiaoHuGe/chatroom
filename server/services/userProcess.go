@@ -14,14 +14,14 @@ type UserProcess struct {
 	userId int
 }
 
-func marshalMessage(userId int) (data []byte, err error) {
+func marshalMessage(userId, userStatus int) (data []byte, err error) {
 	// 创建Message结构体对象
 	var msg message.Message
 	msg.Type = message.NotifyUserStatusMsgType
 	// 创建NotifyOnlineMsg结构体对象
 	var notifyUserStatusMsg message.NotifyUserStatusMsg
 	notifyUserStatusMsg.UserId = userId
-	notifyUserStatusMsg.UserStatus = message.UserOnline
+	notifyUserStatusMsg.UserStatus = userStatus
 
 	// 把NotifyOnlineMsg序列化
 	data, err = json.Marshal(notifyUserStatusMsg)
@@ -38,10 +38,10 @@ func marshalMessage(userId int) (data []byte, err error) {
 	return
 }
 
-// 通知其它在线用户我上线
-func (this *UserProcess)NotifyOtherOnlineUser(userId int) {
+// 通知其它在线用户我状态发生改变
+func (this *UserProcess)NotifyOtherOnlineUser(userId, userStatus int) {
 
-	data, err := marshalMessage(userId)
+	data, err := marshalMessage(userId, userStatus)
 	if err != nil {
 		fmt.Println("json.Marsha loginMsg error: ", err)
 		return
@@ -52,44 +52,53 @@ func (this *UserProcess)NotifyOtherOnlineUser(userId int) {
 			continue
 		}
 		// 注意：使用up调用
-		up.NotifyMeOnline(data)
+		//up.NotifyMeOnline(data)
+		// 发送data到客户端
+		transfer := &utils.Transfer{
+			Conn: up.Conn,
+		}
+		err := transfer.WritePkg(data)
+		if err != nil {
+			fmt.Println("utils.WritePkg error:", err)
+			return
+		}
 	}
 }
 
-func (this *UserProcess)NotifyMeOnline(data []byte) {
-	//// 创建Message结构体对象
-	//var msg message.Message
-	//msg.Type = message.NotifyUserStatusMsgType
-	//// 创建NotifyOnlineMsg结构体对象
-	//var notifyUserStatusMsg message.NotifyUserStatusMsg
-	//notifyUserStatusMsg.UserId = userId
-	//notifyUserStatusMsg.UserStatus = message.UserOnline
-	//
-	//// 把NotifyOnlineMsg序列化
-	//data, err := json.Marshal(notifyUserStatusMsg)
-	//if err != nil {
-	//	fmt.Println("json.Marsha loginMsg error: ", err)
-	//	return
-	//}
-	//msg.Data = string(data)
-	//
-	//// 把Message序列化
-	//data, err = json.Marshal(msg)
-	//if err != nil {
-	//	fmt.Println("json.Marsha Message error: ", err)
-	//	return
-	//}
-
-	// 发送data到客户端
-	transfer := &utils.Transfer{
-		Conn: this.Conn,
-	}
-	err := transfer.WritePkg(data)
-	if err != nil {
-		fmt.Println("utils.WritePkg error:", err)
-		return
-	}
-}
+//func (this *UserProcess)NotifyMeOnline(data []byte) {
+//	//// 创建Message结构体对象
+//	//var msg message.Message
+//	//msg.Type = message.NotifyUserStatusMsgType
+//	//// 创建NotifyOnlineMsg结构体对象
+//	//var notifyUserStatusMsg message.NotifyUserStatusMsg
+//	//notifyUserStatusMsg.UserId = userId
+//	//notifyUserStatusMsg.UserStatus = message.UserOnline
+//	//
+//	//// 把NotifyOnlineMsg序列化
+//	//data, err := json.Marshal(notifyUserStatusMsg)
+//	//if err != nil {
+//	//	fmt.Println("json.Marsha loginMsg error: ", err)
+//	//	return
+//	//}
+//	//msg.Data = string(data)
+//	//
+//	//// 把Message序列化
+//	//data, err = json.Marshal(msg)
+//	//if err != nil {
+//	//	fmt.Println("json.Marsha Message error: ", err)
+//	//	return
+//	//}
+//
+//	//// 发送data到客户端
+//	//transfer := &utils.Transfer{
+//	//	Conn: this.Conn,
+//	//}
+//	//err := transfer.WritePkg(data)
+//	//if err != nil {
+//	//	fmt.Println("utils.WritePkg error:", err)
+//	//	return
+//	//}
+//}
 
 func (this *UserProcess)ServerProcessRegister(msg *message.Message) (err error){
 
@@ -201,11 +210,73 @@ func (this *UserProcess)ServerProcessLogin(msg *message.Message) (err error){
 		}
 
 		// 实时通知其他用户上线消息
-		this.NotifyOtherOnlineUser(loginMsg.UserId)
+		this.NotifyOtherOnlineUser(loginMsg.UserId, message.UserOnline)
 	}
 
 	// 序列化loginResMsg
 	data, err := json.Marshal(loginResMsg)
+	if err != nil {
+		fmt.Println("json.Marshal error: ", err)
+	}
+	resMsg.Data = string(data)
+
+	// 序列化Message
+	data, err = json.Marshal(resMsg)
+	if err != nil {
+		fmt.Println("json.Marsha Message error: ", err)
+	}
+	transfer := &utils.Transfer{
+		Conn:this.Conn,
+	}
+	transfer.WritePkg(data)
+	return
+}
+
+func (this *UserProcess)ServerProcessLogout(msg *message.Message) (err error){
+
+	// 创建LogoutMsg结构体
+	var logoutMsg message.LogoutMsg
+	err = json.Unmarshal([]byte(msg.Data), &logoutMsg)
+	if err != nil {
+		fmt.Println("json.Unmarshal err: ", err)
+		return
+	}
+
+	fmt.Println("LogoutMsg userID:", logoutMsg.UserId)
+
+	// 创建Message结构体
+	var resMsg message.Message
+	resMsg.Type = message.LogoutResMsgType
+
+	// 创建LogoutResMsg结构体
+	var logoutResMsg message.LogoutResMsg
+
+	// 判断登录
+	_, err = model.MyUserDao.Logout(logoutMsg.UserId)
+	if err != nil {
+		if err == model.ERROR_UESR_NOTEXISTS {
+			fmt.Println("用户不存在")
+			logoutResMsg.Code = 500
+			logoutResMsg.ErrorInfo = err.Error()
+		} else {
+			fmt.Println("服务器内部错误")
+			logoutResMsg.Code = 505
+			logoutResMsg.ErrorInfo = "服务器内部错误"
+		}
+	} else {
+		logoutResMsg.Code = 200
+		fmt.Println("退出成功")
+
+		// 把用户从map删除
+		this.userId = logoutMsg.UserId
+		userMgr.DeleteOnlineUser(this)
+
+		// 实时通知其他用户退出消息
+		this.NotifyOtherOnlineUser(logoutMsg.UserId, message.UserOffline)
+	}
+
+	// 序列化loginResMsg
+	data, err := json.Marshal(logoutResMsg)
 	if err != nil {
 		fmt.Println("json.Marshal error: ", err)
 	}

@@ -21,7 +21,7 @@ func (this *Transfer)ReadPkg() (msg message.Message, err error){
 	if err != nil {
 		return
 	}
-
+	fmt.Println("Conn.Read end")
 	// []byte转Uint32
 	var pkgLen = binary.BigEndian.Uint32(buff[:4])
 	// 获取数据
@@ -29,12 +29,13 @@ func (this *Transfer)ReadPkg() (msg message.Message, err error){
 	if n != int(pkgLen) || err != nil {
 		return
 	}
-
 	// 反序列化数据
 	err = json.Unmarshal(buff[:pkgLen], &msg)
 	if err != nil {
+		fmt.Println(" json.Unmarshal err", err)
 		return
 	}
+	fmt.Println("msg tyoe", msg.Type)
 	return
 }
 

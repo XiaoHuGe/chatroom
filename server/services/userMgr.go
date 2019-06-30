@@ -2,6 +2,8 @@ package services
 
 import "fmt"
 
+const maxOnlineUser = 100
+
 var (
 	userMgr *UserMgr
 )
@@ -10,9 +12,9 @@ type UserMgr struct {
 	onlineUser map[int]*UserProcess
 }
 
-func init()  {
+func init() {
 	userMgr = &UserMgr{
-		onlineUser:make(map[int]*UserProcess, 100),
+		onlineUser:make(map[int]*UserProcess, maxOnlineUser),
 	}
 }
 
