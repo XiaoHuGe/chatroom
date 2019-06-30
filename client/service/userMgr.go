@@ -1,6 +1,7 @@
 package service
 
 import (
+	"chatroom/client/model"
 	"chatroom/common/message"
 	"fmt"
 )
@@ -8,6 +9,7 @@ import (
 const maxOnlineUser = 100
 
 var onlineUsers map[int]*message.User = make(map[int]*message.User, maxOnlineUser)
+var currentUser model.CurrentUser
 func GetAllUser() {
 	fmt.Printf("当前在线用户列表id:")
 	for id, user := range onlineUsers{

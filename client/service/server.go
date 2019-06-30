@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-func ShowMenu(conn net.Conn, userId int)  {
+func ShowMenu()  {
 	fmt.Println("-------1. 显示在线用户列表---------")
 	fmt.Println("-------2. 发送消息---------")
 	fmt.Println("-------3. 信息列表---------")
@@ -17,18 +17,23 @@ func ShowMenu(conn net.Conn, userId int)  {
 	fmt.Println("请选择(1-4):")
 
 	var key int
+	var content string
+	sp := SmsProcess{}
+	up := &UserProcess{}
+
 	fmt.Scanf("%d\n", &key)
 	switch key {
 		case 1:
 			GetAllUser()
 		case 2:
-			fmt.Println("发送消息")
+			fmt.Println("输入要群发的消息")
+			fmt.Scanf("%s\n", &content)
+			sp.SendGroupMsg(content)
 		case 3:
 			fmt.Println("信息列表")
 		case 4:
 			fmt.Println("退出系统")
-			up := &UserProcess{}
-			up.Logout(conn, userId)
+			up.Logout()
 			//os.Exit(0)
 		default:
 			fmt.Println("输入错误")
@@ -82,6 +87,17 @@ func serverProcessMes(conn net.Conn) {
 					fmt.Println("err_info:", logoutResMsg.ErrorInfo)
 					return
 				}
+			case message.SmsMsgType:
+				var smsMsg message.SmsMsg
+				// 反序列化message
+				err = json.Unmarshal([]byte(msg.Data), &smsMsg)
+				if err != nil {
+					fmt.Println("json.Unmarshal error:", err)
+					return
+				}
+				info := fmt.Sprintf("接收到用户id为【%d】 的消息，内容为【 %s】", smsMsg.UserId, smsMsg.Content)
+				fmt.Println(info)
+
 		}
 	}
 }

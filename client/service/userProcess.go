@@ -154,6 +154,10 @@ func (this *UserProcess)Login(userId int, userPwd string) (err error) {
 		return
 	}
 	if loginResMsg.Code  == 200 {
+		currentUser.Conn = conn
+		currentUser.UserId = userId
+		currentUser.UserStatus = message.UserOnline
+
 		fmt.Printf("**** id为 %d 的用户登录成功 ****\n", userId)
 		fmt.Println("code:", loginResMsg.Code)
 		fmt.Printf("已在线用户列表id:")
@@ -174,7 +178,7 @@ func (this *UserProcess)Login(userId int, userPwd string) (err error) {
 
 		// 进入菜单
 		for {
-			ShowMenu(conn, userId)
+			ShowMenu()
 		}
 
 	} else {
@@ -186,16 +190,16 @@ func (this *UserProcess)Login(userId int, userPwd string) (err error) {
 	return
 }
 
-func (this *UserProcess)Logout(conn net.Conn, userId int) (err error) {
+func (this *UserProcess)Logout() (err error) {
 	fmt.Println("进入退出系统...")
-	fmt.Println("用户Id：", userId)
+	fmt.Println("用户Id：", currentUser.UserId)
 
 	// 创建Message结构体对象
 	var msg message.Message
 	msg.Type = message.LogoutMsgType
 	// 创建LoginMsg结构体对象
 	var logoutMsg message.LogoutMsg
-	logoutMsg.UserId = userId
+	logoutMsg.UserId = currentUser.UserId
 
 	// 把LoginMsg序列化
 	data, err := json.Marshal(logoutMsg)
@@ -214,7 +218,7 @@ func (this *UserProcess)Logout(conn net.Conn, userId int) (err error) {
 
 	// 发送data到服务器
 	transfer := &utils.Transfer{
-		Conn:conn,
+		Conn:currentUser.Conn,
 	}
 	err = transfer.WritePkg(data)
 	if err != nil {
