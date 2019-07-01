@@ -12,6 +12,7 @@ import (
 type UserProcess struct {
 	Conn net.Conn
 	userId int
+	UserStatus int
 }
 
 func marshalMessage(userId, userStatus int) (data []byte, err error) {
@@ -47,8 +48,12 @@ func (this *UserProcess)NotifyOtherOnlineUser(userId, userStatus int) {
 		return
 	}
 	// 遍历所有在线用户
-	for id, up := range userMgr.onlineUser{
+	for id, up := range userMgr.users{
 		if id == userId {
+			continue
+		}
+		// 离线用户
+		if up.UserStatus == message.UserOffline {
 			continue
 		}
 		// 注意：使用up调用
@@ -64,41 +69,6 @@ func (this *UserProcess)NotifyOtherOnlineUser(userId, userStatus int) {
 		}
 	}
 }
-
-//func (this *UserProcess)NotifyMeOnline(data []byte) {
-//	//// 创建Message结构体对象
-//	//var msg message.Message
-//	//msg.Type = message.NotifyUserStatusMsgType
-//	//// 创建NotifyOnlineMsg结构体对象
-//	//var notifyUserStatusMsg message.NotifyUserStatusMsg
-//	//notifyUserStatusMsg.UserId = userId
-//	//notifyUserStatusMsg.UserStatus = message.UserOnline
-//	//
-//	//// 把NotifyOnlineMsg序列化
-//	//data, err := json.Marshal(notifyUserStatusMsg)
-//	//if err != nil {
-//	//	fmt.Println("json.Marsha loginMsg error: ", err)
-//	//	return
-//	//}
-//	//msg.Data = string(data)
-//	//
-//	//// 把Message序列化
-//	//data, err = json.Marshal(msg)
-//	//if err != nil {
-//	//	fmt.Println("json.Marsha Message error: ", err)
-//	//	return
-//	//}
-//
-//	//// 发送data到客户端
-//	//transfer := &utils.Transfer{
-//	//	Conn: this.Conn,
-//	//}
-//	//err := transfer.WritePkg(data)
-//	//if err != nil {
-//	//	fmt.Println("utils.WritePkg error:", err)
-//	//	return
-//	//}
-//}
 
 func (this *UserProcess)ServerProcessRegister(msg *message.Message) (err error){
 
@@ -134,6 +104,11 @@ func (this *UserProcess)ServerProcessRegister(msg *message.Message) (err error){
 			registerResMsg.ErrorInfo = "服务器内部错误"
 		}
 	} else {
+		// 把用户添加到map
+		this.userId = registerMsg.User.UserId
+		this.UserStatus = message.UserOffline
+		userMgr.AddOnlineUser(this)
+
 		registerResMsg.Code = 200
 		fmt.Println("注册成功")
 	}
@@ -199,13 +174,17 @@ func (this *UserProcess)ServerProcessLogin(msg *message.Message) (err error){
 		loginResMsg.Code = 200
 		fmt.Println("登录成功")
 
-		// 把在线用户添加到map
+		// 更新map用户状态
 		this.userId = loginMsg.UserId
-		userMgr.AddOnlineUser(this)
+		this.UserStatus = message.UserOnline
+		userMgr.UpdateOnlineUser(this)
 
 		// 返回给客户端所有在线用户
-		for k, _ := range userMgr.onlineUser{
-			loginResMsg.UsersId = append(loginResMsg.UsersId, k)
+		for k, up := range userMgr.users{
+			if up.UserStatus == message.UserOnline {
+				loginResMsg.UsersId = append(loginResMsg.UsersId, k)
+			}
+			//loginResMsg.UsersId = append(loginResMsg.UsersId, k)
 			//println("在线用户：", k)
 		}
 
@@ -267,9 +246,11 @@ func (this *UserProcess)ServerProcessLogout(msg *message.Message) (err error){
 		logoutResMsg.Code = 200
 		fmt.Println("退出成功")
 
-		// 把用户从map删除
+		// 更新用户状态
 		this.userId = logoutMsg.UserId
-		userMgr.DeleteOnlineUser(this)
+		this.UserStatus = message.UserOffline
+		userMgr.UpdateOnlineUser(this)
+		//userMgr.DeleteOnlineUser(this)
 
 		// 实时通知其他用户退出消息
 		this.NotifyOtherOnlineUser(logoutMsg.UserId, message.UserOffline)

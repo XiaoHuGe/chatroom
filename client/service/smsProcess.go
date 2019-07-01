@@ -46,3 +46,39 @@ func (this *SmsProcess)SendGroupMsg(content string) (err error) {
 	}
 	return
 }
+
+func (this *SmsProcess)SendProriveChatMsg(destUserId int, content string) {
+	// 创建Message结构体对象
+	var msg message.Message
+	msg.Type = message.PrivateChatSmsMsgType
+	// 创建LoginMsg结构体对象
+	var privateChatSmsMsg message.PrivateChatSmsMsg
+	privateChatSmsMsg.UserId = currentUser.UserId
+	privateChatSmsMsg.Content = content
+	privateChatSmsMsg.DestUserId = destUserId
+	// 把LoginMsg序列化
+	data, err := json.Marshal(privateChatSmsMsg)
+	if err != nil {
+		fmt.Println("json.Marsha loginMsg error")
+		return
+	}
+	msg.Data = string(data)
+
+	// 把Message序列化
+	data, err = json.Marshal(msg)
+	if err != nil {
+		fmt.Println("json.Marsha Message error")
+		return
+	}
+
+	// 发送data到服务器
+	transfer := &utils.Transfer{
+		Conn:currentUser.Conn,
+	}
+	err = transfer.WritePkg(data)
+	if err != nil {
+		fmt.Println("utils.WritePkg error:", err)
+		return
+	}
+	return
+}

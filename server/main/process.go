@@ -33,6 +33,9 @@ func (this *Process)ServerProcessMsg(msg *message.Message) (err error) {
 		case message.SmsMsgType:
 			smsPro := &services.SmsProcess{}
 			smsPro.SendGroupMsg(msg)
+		case message.PrivateChatSmsMsgType:
+			smsPro := &services.SmsProcess{}
+			smsPro.SendPrivateChatMsg(msg)
 		default:
 			println("消息类型不存在")
 	}

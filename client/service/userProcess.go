@@ -171,7 +171,7 @@ func (this *UserProcess)Login(userId int, userPwd string) (err error) {
 				UserId:id,
 				UserStatus:message.UserOnline,
 			}
-			onlineUsers[id] = user
+			users[id] = user
 		}
 		println()
 		go serverProcessMes(conn)

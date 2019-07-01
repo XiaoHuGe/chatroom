@@ -8,11 +8,11 @@ import (
 
 const maxOnlineUser = 100
 
-var onlineUsers map[int]*message.User = make(map[int]*message.User, maxOnlineUser)
+var users map[int]*message.User = make(map[int]*message.User, maxOnlineUser)
 var currentUser model.CurrentUser
 func GetAllUser() {
 	fmt.Printf("当前在线用户列表id:")
-	for id, user := range onlineUsers{
+	for id, user := range users{
 		if user.UserStatus == message.UserOnline {
 			fmt.Printf(" %d", id)
 		}
@@ -22,7 +22,7 @@ func GetAllUser() {
 
 // 更新map
 func UpdateUserStatus(notifyUserStatus *message.NotifyUserStatusMsg) {
-	user, ok := onlineUsers[notifyUserStatus.UserId]
+	user, ok := users[notifyUserStatus.UserId]
 	if !ok {
 		// 把上线用户添加到map
 		user = &message.User{
@@ -31,6 +31,6 @@ func UpdateUserStatus(notifyUserStatus *message.NotifyUserStatusMsg) {
 		}
 	}
 	user.UserStatus = notifyUserStatus.UserStatus
-	onlineUsers[notifyUserStatus.UserId] = user
+	users[notifyUserStatus.UserId] = user
 	GetAllUser()
 }

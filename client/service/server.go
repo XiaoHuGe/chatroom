@@ -11,12 +11,13 @@ import (
 
 func ShowMenu()  {
 	fmt.Println("-------1. 显示在线用户列表---------")
-	fmt.Println("-------2. 发送消息---------")
-	fmt.Println("-------3. 信息列表---------")
+	fmt.Println("-------2. 发送群消息---------")
+	fmt.Println("-------3. 发送点对点消息---------")
 	fmt.Println("-------4. 退出系统---------")
 	fmt.Println("请选择(1-4):")
 
 	var key int
+	var destUserId int
 	var content string
 	sp := SmsProcess{}
 	up := &UserProcess{}
@@ -26,11 +27,15 @@ func ShowMenu()  {
 		case 1:
 			GetAllUser()
 		case 2:
-			fmt.Println("输入要群发的消息")
+			fmt.Println("输入要群发的消息：")
 			fmt.Scanf("%s\n", &content)
 			sp.SendGroupMsg(content)
 		case 3:
-			fmt.Println("信息列表")
+			fmt.Println("输入好友id：")
+			fmt.Scanf("%d\n", &destUserId)
+			fmt.Println("输入要发送的消息：")
+			fmt.Scanf("%s\n", &content)
+			sp.SendProriveChatMsg(destUserId, content)
 		case 4:
 			fmt.Println("退出系统")
 			up.Logout()
@@ -95,9 +100,17 @@ func serverProcessMes(conn net.Conn) {
 					fmt.Println("json.Unmarshal error:", err)
 					return
 				}
-				info := fmt.Sprintf("接收到用户id为【%d】 的消息，内容为【 %s】", smsMsg.UserId, smsMsg.Content)
+				info := fmt.Sprintf("接收到用户id为【%d】 的群消息，内容为【 %s】", smsMsg.UserId, smsMsg.Content)
 				fmt.Println(info)
-
+			case message.PrivateChatSmsMsgType:
+				var privateChatSmsMsg message.PrivateChatSmsMsg
+				err = json.Unmarshal([]byte(msg.Data), &privateChatSmsMsg)
+				if err != nil {
+					fmt.Println("json.Unmarshal error:", err)
+					return
+				}
+				info := fmt.Sprintf("接收到用户id为【%d】 的消息，内容为【 %s】", privateChatSmsMsg.UserId, privateChatSmsMsg.Content)
+				fmt.Println(info)
 		}
 	}
 }
